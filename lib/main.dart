@@ -14,72 +14,44 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      // ),
-      home: const CountDownPokerTime(
-        title: 'Poker Countdown App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: const CountDownPokerTime(),
     );
   }
 }
 
 class CountDownPokerTime extends StatefulWidget {
-  const CountDownPokerTime({super.key, required this.title});
-  final String title;
+  const CountDownPokerTime({super.key, this.title});
+  final String? title;
+
   @override
   State<CountDownPokerTime> createState() => _CountDownPockerTime();
 }
 
 class _CountDownPockerTime extends State<CountDownPokerTime> {
-  Timer? countdownTimer;
-  Duration myDuration = Duration(days: 5);
+  Timer? playerTimer;
+  Timer? blindTimer;
+
+  SettingTime? settingState;
+
+  Duration? playerTimeDuration;
+  Duration? blindTimeDuration;
+  int? currentBlindLevel;
+
   @override
   void initState() {
     super.initState();
   }
 
-  void startTimer() {
-    countdownTimer =
-        Timer.periodic(Duration(seconds: 1), (_) => setCountDown());
-  }
-
-  void stopTimer() {
-    setState(() => countdownTimer!.cancel());
-  }
-
-  void resetTimer() {
-    stopTimer();
-    setState(() => myDuration = Duration(days: 5));
-  }
-
-  // update the countdown and rebuild the page.
-  void setCountDown() {
-    final reduceSecondsBy = 1;
-    setState(() {
-      final seconds = myDuration.inSeconds - reduceSecondsBy;
-      if (seconds < 0) {
-        countdownTimer!.cancel();
-      } else {
-        myDuration = Duration(seconds: seconds);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    String strDigits(int n) => n.toString().padLeft(2, '0');
-    // final days = strDigits(myDuration.inDays);
-    final hours = strDigits(myDuration.inHours.remainder(24));
-    final minutes = strDigits(myDuration.inMinutes.remainder(60));
-    final seconds = strDigits(myDuration.inSeconds.remainder(60));
-    final int blindLevel = 0;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.title,
-        ),
+        title: Text('Poker Countdown App'),
       ),
       body: Container(
           child: Column(
@@ -98,16 +70,19 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
                 ),
               ),
               IconButton(
-                // onPressed: () {
-                //   Navigator.of(context).pushNamed(SettingScreen.routeName);
-                // },
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     new MaterialPageRoute(
-                      builder: (context) => new SettingScreen(),
+                      builder: (context) =>
+                          new SettingScreen(setting: settingState),
                     ),
                   );
+                  if (result != null) {
+                    setState(() {
+                      settingState = result;
+                    });
+                  }
                 },
                 icon: Icon(
                   FontAwesomeIcons.gear,
@@ -132,7 +107,7 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '$blindLevel',
+                  '${currentBlindLevel ?? 0}',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -145,7 +120,7 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
             height: 30,
           ),
           Text(
-            '$hours:$minutes:$seconds',
+            formatMMss(playerTimeDuration),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Colors.amber,
@@ -189,7 +164,7 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '$hours:$minutes:$seconds',
+                  formatMMss(blindTimeDuration),
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -201,5 +176,62 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
         ],
       )),
     );
+  }
+
+  void startTimer() {
+    if (settingState == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('please set the value!')));
+    }
+    setState(() {
+      currentBlindLevel = settingState!.blindLevel;
+      playerTimeDuration = Duration(seconds: settingState!.playerTime ?? 0);
+      blindTimeDuration = Duration(seconds: settingState!.blindTime ?? 0);
+    });
+    playerTimer = Timer.periodic(Duration(seconds: 1), (_) => setPlayerTimer());
+    blindTimer = Timer.periodic(Duration(seconds: 1), (_) => setBlindTimer());
+  }
+
+  void stopTimer() {
+    setState(() => playerTimer!.cancel());
+    setState(() => blindTimer!.cancel());
+  }
+
+  void resetTimer() {
+    stopTimer();
+    setState(() {
+      playerTimeDuration = Duration(seconds: settingState!.playerTime ?? 0);
+    });
+  }
+
+  // update the countdown and rebuild the page.
+  setPlayerTimer() {
+    setState(() {
+      if (playerTimeDuration?.inSeconds != 0) {
+        playerTimeDuration =
+            Duration(seconds: playerTimeDuration!.inSeconds - 1);
+      } else {
+        playerTimer!.cancel();
+        playerTimeDuration = Duration(seconds: settingState!.playerTime ?? 0);
+      }
+    });
+  }
+
+  String formatMMss(Duration? duration) {
+    final minutes =
+        duration?.inMinutes.remainder(60).toString().padLeft(2, '0') ?? '00';
+    final seconds =
+        duration?.inSeconds.remainder(60).toString().padLeft(2, '0') ?? '00';
+    return minutes + ':' + seconds;
+  }
+
+  setBlindTimer() {
+    setState(() {
+      if (blindTimeDuration?.inSeconds != 0) {
+        blindTimeDuration = Duration(seconds: blindTimeDuration!.inSeconds - 1);
+      } else {
+        blindTimeDuration = Duration(seconds: settingState!.blindTime ?? 0);
+      }
+    });
   }
 }
