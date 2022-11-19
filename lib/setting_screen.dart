@@ -1,10 +1,16 @@
-import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
+
+class SettingTime {
+  int? blindTime;
+  int? playerTime;
+  int? blindLevel;
+
+  SettingTime({this.blindLevel, this.blindTime, this.playerTime});
+}
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({super.key});
+  const SettingScreen({super.key, this.setting});
+  final SettingTime? setting;
 
   static const String routeName = '/setting_screen';
   @override
@@ -12,35 +18,33 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  TextEditingController _textFieldInit = TextEditingController();
-  TextEditingController _dateTimeFiedInit = TextEditingController();
+  TextEditingController _blindLevelController = TextEditingController();
+  TextEditingController _playerTimeController = TextEditingController();
+  TextEditingController _blindTimeController = TextEditingController();
+
+  late SettingTime settingState;
 
   @override
   void initState() {
     super.initState();
-    _textFieldInit = new TextEditingController(text: '0');
-    _dateTimeFiedInit = new TextEditingController(text: '00:00:00');
+    settingState = widget.setting ??
+        SettingTime(blindLevel: 1, playerTime: 60, blindTime: 2 * 60);
+    _blindLevelController =
+        TextEditingController(text: settingState.blindLevel.toString());
+    _playerTimeController =
+        TextEditingController(text: settingState.playerTime.toString());
+    _blindTimeController =
+        TextEditingController(text: settingState.blindTime.toString());
   }
 
   @override
   Widget build(BuildContext context) {
-    final format = DateFormat.Hms();
-    final initTime = DateTime.now();
-    //  DateFormat('hh:mm:ss');
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Setting',
           textAlign: TextAlign.center,
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(FontAwesomeIcons.arrowLeft),
-          )
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -51,7 +55,7 @@ class _SettingScreenState extends State<SettingScreen> {
             Padding(
               padding: EdgeInsets.all(10),
               child: TextField(
-                controller: _textFieldInit,
+                controller: _blindLevelController,
                 decoration: new InputDecoration(
                   labelText: 'Blind Level',
                   labelStyle: TextStyle(
@@ -61,6 +65,9 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
                 keyboardType: TextInputType.number,
+                onChanged: (text) {
+                  settingState.blindLevel = int.tryParse(text);
+                },
               ),
             ),
             SizedBox(
@@ -68,30 +75,20 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
             Padding(
               padding: EdgeInsets.all(10),
-              child: DateTimeField(
-                controller: _dateTimeFiedInit,
-                strutStyle: StrutStyle(
-                  height: 2,
-                ),
-                decoration: InputDecoration(
-                  label: Text(
-                    'Player Time',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
-                    ),
+              child: TextField(
+                controller: _blindTimeController,
+                decoration: new InputDecoration(
+                  labelText: 'Blind Timer',
+                  labelStyle: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
                   ),
                 ),
-                format: format,
-                onShowPicker: ((context, currentValue) async {
-                  final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(
-                          currentValue ?? DateTime.now()));
-                  var playerTime = DateTimeField.convert(time);
-                  return playerTime;
-                }),
+                keyboardType: TextInputType.number,
+                onChanged: (text) {
+                  settingState.blindTime = int.tryParse(text);
+                },
               ),
             ),
             SizedBox(
@@ -99,38 +96,29 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
             Padding(
               padding: EdgeInsets.all(10),
-              child: DateTimeField(
-                controller: _dateTimeFiedInit,
-                strutStyle: StrutStyle(
-                  height: 2,
-                ),
-                decoration: InputDecoration(
-                  label: Text(
-                    'Blind Time',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
-                    ),
+              child: TextField(
+                controller: _playerTimeController,
+                decoration: new InputDecoration(
+                  labelText: 'Player Timer',
+                  labelStyle: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
                   ),
                 ),
-                format: format,
-                onShowPicker: ((context, currentValue) async {
-                  final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(
-                        currentValue ?? initTime,
-                      ));
-                  var blindTime = DateTimeField.convert(time);
-                  return blindTime;
-                }),
+                keyboardType: TextInputType.number,
+                onChanged: (text) {
+                  settingState.playerTime = int.tryParse(text);
+                },
               ),
             ),
             SizedBox(
               height: 20,
             ),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).pop(settingState);
+              },
               child: Text(
                 'Save',
                 style: TextStyle(
