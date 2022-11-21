@@ -141,6 +141,13 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
                 ),
               ),
               ElevatedButton(
+                onPressed: resumeTimer,
+                child: Text(
+                  'Resume',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ElevatedButton(
                 onPressed: stopTimer,
                 child: Text(
                   'Stop',
@@ -186,10 +193,12 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
     setState(() {
       currentBlindLevel = settingState!.blindLevel;
       playerTimeDuration = Duration(seconds: settingState!.playerTime ?? 0);
-      blindTimeDuration = Duration(seconds: settingState!.blindTime ?? 0);
+      blindTimeDuration = Duration(seconds: 0);
     });
+    final oldBlindLevel = currentBlindLevel;
     playerTimer = Timer.periodic(Duration(seconds: 1), (_) => setPlayerTimer());
-    blindTimer = Timer.periodic(Duration(seconds: 1), (_) => setBlindTimer());
+    blindTimer = Timer.periodic(
+        Duration(seconds: 1), (_) => setBlindTimer(oldBlindLevel));
   }
 
   void stopTimer() {
@@ -204,16 +213,45 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
     });
   }
 
-  // update the countdown and rebuild the page.
+  void resumeTimer() {
+    if (settingState == null) {
+      playerTimer!.cancel();
+      blindTimer!.cancel();
+    }
+    setState(() {
+      currentBlindLevel;
+      playerTimeDuration;
+      blindTimeDuration;
+    });
+    final oldBlindLevel = currentBlindLevel;
+    playerTimer = Timer.periodic(Duration(seconds: 1), (_) => setPlayerTimer());
+    blindTimer = Timer.periodic(
+        Duration(seconds: 1), (_) => setBlindTimer(oldBlindLevel));
+  }
+
   setPlayerTimer() {
     setState(() {
       if (playerTimeDuration?.inSeconds != 0) {
         playerTimeDuration =
             Duration(seconds: playerTimeDuration!.inSeconds - 1);
       } else {
-        playerTimer!.cancel();
         playerTimeDuration = Duration(seconds: settingState!.playerTime ?? 0);
       }
+    });
+  }
+
+  setBlindTimer(oldBlindLevel) {
+    setState(() {
+      // if (blindTimeDuration?.inSeconds != 0) {
+      blindTimeDuration = Duration(seconds: blindTimeDuration!.inSeconds + 1);
+      // } else {
+      //   blindTimeDuration = Duration(seconds: settingState!.blindTime ?? 0);
+      // }
+      String initBlindTime = (settingState!.blindTime).toString();
+      final abc = int.parse(initBlindTime);
+      final currentBlindTime = blindTimeDuration!.inSeconds;
+      String buildBlindLevel = ((currentBlindTime / abc).floor()).toString();
+      currentBlindLevel = oldBlindLevel + int.parse(buildBlindLevel);
     });
   }
 
@@ -223,15 +261,5 @@ class _CountDownPockerTime extends State<CountDownPokerTime> {
     final seconds =
         duration?.inSeconds.remainder(60).toString().padLeft(2, '0') ?? '00';
     return minutes + ':' + seconds;
-  }
-
-  setBlindTimer() {
-    setState(() {
-      if (blindTimeDuration?.inSeconds != 0) {
-        blindTimeDuration = Duration(seconds: blindTimeDuration!.inSeconds - 1);
-      } else {
-        blindTimeDuration = Duration(seconds: settingState!.blindTime ?? 0);
-      }
-    });
   }
 }

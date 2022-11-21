@@ -18,8 +18,8 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  TextEditingController _blindLevelControler = TextEditingController();
-  TextEditingController _playerTimeControler = TextEditingController();
+  TextEditingController _blindLevelController = TextEditingController();
+  TextEditingController _playerTimeController = TextEditingController();
   TextEditingController _blindTimeController = TextEditingController();
 
   late SettingTime settingState;
@@ -29,9 +29,9 @@ class _SettingScreenState extends State<SettingScreen> {
     super.initState();
     settingState = widget.setting ??
         SettingTime(blindLevel: 1, playerTime: 60, blindTime: 2 * 60);
-    _blindLevelControler =
+    _blindLevelController =
         TextEditingController(text: settingState.blindLevel.toString());
-    _playerTimeControler =
+    _playerTimeController =
         TextEditingController(text: settingState.playerTime.toString());
     _blindTimeController =
         TextEditingController(text: settingState.blindTime.toString());
@@ -55,7 +55,7 @@ class _SettingScreenState extends State<SettingScreen> {
             Padding(
               padding: EdgeInsets.all(10),
               child: TextField(
-                controller: _blindLevelControler,
+                controller: _blindLevelController,
                 decoration: new InputDecoration(
                   labelText: 'Blind Level',
                   labelStyle: TextStyle(
@@ -97,7 +97,7 @@ class _SettingScreenState extends State<SettingScreen> {
             Padding(
               padding: EdgeInsets.all(10),
               child: TextField(
-                controller: _playerTimeControler,
+                controller: _playerTimeController,
                 decoration: new InputDecoration(
                   labelText: 'Player Timer',
                   labelStyle: TextStyle(
